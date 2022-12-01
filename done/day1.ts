@@ -9,7 +9,7 @@ import {
   sorted,
   fixedStanzas,
   toNum,
-} from "./common";
+} from "../common";
 
 const groups = input.split("\n\n").map((group) =>
   group
