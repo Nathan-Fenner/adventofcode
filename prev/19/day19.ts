@@ -9,7 +9,7 @@ import {
   sorted,
   totalBranchCount,
   totalCatchupTime,
-} from "./common";
+} from "../../common";
 
 const stanzas = input
   .replace(/[A-Z]/g, (x) => " " + x)

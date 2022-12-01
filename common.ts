@@ -3,10 +3,12 @@ import { readFileSync } from "fs";
 export const processArgs = process.argv.filter(
   (path) => !path.startsWith("C:"),
 );
-const inputFolder = "2";
-export const input = readFileSync(processArgs[0] || `${inputFolder}/in.txt`, {
+
+export const input = readFileSync(processArgs[0] || `in.txt`, {
   encoding: "ascii",
-});
+})
+  .replaceAll("\r\n", "\n")
+  .trim();
 
 export let debugOn = true;
 
@@ -22,6 +24,22 @@ export function disableDebug(): void {
 
 export function enableDebug(): void {
   debugOn = true;
+}
+
+export function mod(a: number, m: number): number {
+  return ((a % m) + m) % m;
+}
+export function div(a: number, m: number): number {
+  return Math.floor(a / m);
+}
+
+export function modifyVal<K, V>(
+  m: Map<K, V>,
+  k: K,
+  f: (old: V) => V,
+  defaultValue: V,
+): void {
+  m.set(k, f(m.has(k) ? m.get(k)! : defaultValue));
 }
 
 export function sum(xs: Iterable<number>): number {
@@ -175,6 +193,23 @@ export function iota(n: number): number[] {
   return r;
 }
 
+export function* rangeInclusive(
+  lo: number,
+  hi: number,
+): Generator<number, void, unknown> {
+  for (let i = lo; i <= hi; i++) {
+    yield i;
+  }
+}
+export function* rangeExclusive(
+  lo: number,
+  hi: number,
+): Generator<number, void, unknown> {
+  for (let i = lo; i < hi; i++) {
+    yield i;
+  }
+}
+
 export type CompKey =
   | number
   | string
@@ -278,4 +313,25 @@ export function exploreBranches<Snapshot>(
 
     f(actions, recentSnapshot);
   }
+}
+
+export function toNum(s: string): number {
+  return parseFloat(s);
+}
+
+export function fixedStanzas<
+  T extends Record<string, any> | readonly unknown[] | [],
+>(s: string, partsParsers: { [k in keyof T]: (stanza: string) => T[k] }): T {
+  const parts = s.trim().split("\n\n");
+
+  return Object.fromEntries(
+    Object.entries(partsParsers).map(([key, parser], i) => [
+      key,
+      (parser as any)(parts[i]),
+    ]),
+  ) as T;
+}
+
+export function stanzas(s: string): string[] {
+  return s.split("\n\n");
 }
