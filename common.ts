@@ -4,7 +4,7 @@ export const processArgs = process.argv.filter(
   (path) => !path.startsWith("C:"),
 );
 
-export const input = readFileSync(processArgs[0] || `in.txt`, {
+export const input = readFileSync(processArgs[0] || "in.txt", {
   encoding: "ascii",
 })
   .replaceAll("\r\n", "\n")
@@ -12,10 +12,11 @@ export const input = readFileSync(processArgs[0] || `in.txt`, {
 
 export let debugOn = true;
 
-export function debug(...args: readonly any[]) {
+export function debug<T>(item: T, ...args: readonly any[]) {
   if (debugOn) {
-    console.info(...args);
+    console.info(item, ...args);
   }
+  return item;
 }
 
 export function disableDebug(): void {
@@ -183,6 +184,11 @@ export class Pos2 extends ValueType {
       this.shift(0, -1),
     ];
   }
+  public neighborsDiag(): Pos2[] {
+    return rangeInclusive(-1, 1)
+      .flatMap((x) => rangeInclusive(-1, 1).map((y) => this.shift(x, y)))
+      .filter((q) => q !== this);
+  }
 }
 
 export function iota(n: number): number[] {
@@ -193,21 +199,19 @@ export function iota(n: number): number[] {
   return r;
 }
 
-export function* rangeInclusive(
-  lo: number,
-  hi: number,
-): Generator<number, void, unknown> {
+export function rangeInclusive(lo: number, hi: number): number[] {
+  const r: number[] = [];
   for (let i = lo; i <= hi; i++) {
-    yield i;
+    r.push(i);
   }
+  return r;
 }
-export function* rangeExclusive(
-  lo: number,
-  hi: number,
-): Generator<number, void, unknown> {
+export function rangeExclusive(lo: number, hi: number): number[] {
+  const r: number[] = [];
   for (let i = lo; i < hi; i++) {
-    yield i;
+    r.push(i);
   }
+  return r;
 }
 
 export type CompKey =
