@@ -11,7 +11,7 @@ import {
   fixedStanzas,
   toNum,
   mod,
-} from "./common";
+} from "../common";
 
 let packets: string[] = [];
 

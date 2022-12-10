@@ -34,6 +34,36 @@ export function div(a: number, m: number): number {
   return Math.floor(a / m);
 }
 
+export function gcd(a: number, b: number): number {
+  while (b !== 0) {
+    const t = b;
+    b = mod(a, b);
+    a = t;
+  }
+  return a;
+}
+
+export function egcd(a: number, b: number): { af: number; bf: number } {
+  let [old_r, r] = [a, b];
+  let [old_s, s] = [1, 0];
+  let [old_t, t] = [0, 1];
+
+  while (r !== 0) {
+    let quotient = div(old_r, r);
+    [old_r, r] = [r, old_r - quotient * r];
+    [old_s, s] = [s, old_s - quotient * s];
+    [old_t, t] = [t, old_t - quotient * t];
+  }
+
+  const g = gcd(a, b);
+  const got = a * old_s + b * old_t;
+
+  return {
+    af: old_s * (got / g),
+    bf: old_t * (got / g),
+  };
+}
+
 export function modifyVal<K, V>(
   m: Map<K, V>,
   k: K,
@@ -160,7 +190,6 @@ export class Pos2 extends ValueType {
   constructor(public readonly x: number, public readonly y: number) {
     super([x, y]);
   }
-
   public shift(dx: number, dy: number): Pos2 {
     return new Pos2(this.x + dx, this.y + dy);
   }
@@ -184,11 +213,81 @@ export class Pos2 extends ValueType {
       this.shift(0, -1),
     ];
   }
+  public static cardinal4(): Pos2[] {
+    return [new Pos2(1, 0), new Pos2(0, 1), new Pos2(-1, 0), new Pos2(0, -1)];
+  }
   public neighborsDiag(): Pos2[] {
     return rangeInclusive(-1, 1)
       .flatMap((x) => rangeInclusive(-1, 1).map((y) => this.shift(x, y)))
       .filter((q) => q !== this);
   }
+  public distMax(other: Pos2): number {
+    return Math.max(Math.abs(other.x - this.x), Math.abs(other.y - this.y));
+  }
+  public distAdd(other: Pos2): number {
+    return Math.abs(other.x - this.x) + Math.abs(other.y - this.y);
+  }
+}
+
+export function parseGrid(src: string, cellSize = 1) {
+  const grid = new Map<Pos2, string>();
+  const lines = src.split("\n");
+  let height = lines.length;
+  let width = 0;
+  for (let y = 0; y < lines.length; y++) {
+    for (let i = 0; i < lines[y].length; i += cellSize) {
+      const x = i / cellSize;
+      grid.set(new Pos2(x, y), lines[y].slice(i, i + cellSize));
+    }
+    width = Math.max(width, Math.ceil(lines[y].length / cellSize));
+  }
+  return {
+    grid,
+    width,
+    height,
+  };
+}
+
+export function printGrid<V extends string | number | null>(
+  grid: ReadonlyMap<Pos2, V> | ReadonlySet<Pos2>,
+): string {
+  if (grid instanceof Set) {
+    return printGrid(new Map([...grid].map((p) => [p, "#"])));
+  }
+  let showWidth = 1;
+  for (const v of grid.values()) {
+    if (v === null) {
+      continue;
+    }
+    const sv = v.toString();
+    showWidth = Math.max(showWidth, sv.length);
+  }
+  let min: Pos2 | null = null;
+  let max: Pos2 | null = null;
+  for (const p of grid.keys()) {
+    if (min === null || max === null) {
+      min = p;
+      max = p;
+    } else {
+      min = new Pos2(Math.min(min.x, p.x), Math.min(min.y, p.y));
+      max = new Pos2(Math.max(max.x, p.x), Math.max(max.y, p.y));
+    }
+  }
+  if (!min || !max) {
+    console.info("(empty)");
+    return "(empty)";
+  }
+  let sTotal = "";
+  for (let y = min.y; y <= max.y; y++) {
+    for (let x = min.x; x <= max.x; x++) {
+      const p = new Pos2(x, y);
+      const s = grid.has(p) ? grid.get(p)!.toString() : "";
+      sTotal += s.padStart(showWidth, " ");
+    }
+    sTotal += "\n";
+  }
+  console.info(sTotal);
+  return sTotal;
 }
 
 export function iota(n: number): number[] {
@@ -338,4 +437,8 @@ export function fixedStanzas<
 
 export function stanzas(s: string): string[] {
   return s.split("\n\n");
+}
+
+export function record<T>(r: Record<string, T>): Record<string, T> {
+  return r;
 }
