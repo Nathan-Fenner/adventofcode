@@ -186,6 +186,52 @@ export class ValueType {
   }
 }
 
+export class Pos3 extends ValueType {
+  constructor(
+    public readonly x: number,
+    public readonly y: number,
+    public readonly z: number,
+  ) {
+    super([x, y, z]);
+  }
+  public shift(dx: number, dy: number, dz: number): Pos3 {
+    return new Pos3(this.x + dx, this.y + dy, this.z + dz);
+  }
+  public add(other: Pos3): Pos3 {
+    return this.shift(other.x, other.y, other.z);
+  }
+  public sub(other: Pos3): Pos3 {
+    return this.shift(-other.x, -other.y, -other.z);
+  }
+  public scale(k: number): Pos3 {
+    return new Pos3(this.x * k, this.y * k, this.z * k);
+  }
+  public neighborsOrtho(): Pos3[] {
+    return [
+      this.shift(1, 0, 0),
+      this.shift(0, 1, 0),
+      this.shift(-1, 0, 0),
+      this.shift(0, -1, 0),
+      this.shift(0, 0, 1),
+      this.shift(0, 0, -1),
+    ];
+  }
+  public distMax(other: Pos3): number {
+    return Math.max(
+      Math.abs(other.x - this.x),
+      Math.abs(other.y - this.y),
+      Math.abs(other.z - this.z),
+    );
+  }
+  public distAdd(other: Pos3): number {
+    return (
+      Math.abs(other.x - this.x) +
+      Math.abs(other.y - this.y) +
+      Math.abs(other.z - this.z)
+    );
+  }
+}
+
 export class Pos2 extends ValueType {
   constructor(public readonly x: number, public readonly y: number) {
     super([x, y]);
@@ -249,11 +295,12 @@ export function parseGrid(src: string, cellSize = 1) {
 }
 
 export function printGrid<V extends string | number | null>(
-  grid: ReadonlyMap<Pos2, V> | ReadonlySet<Pos2>,
+  grid2: ReadonlyMap<Pos2, V> | ReadonlySet<Pos2>,
 ): string {
-  if (grid instanceof Set) {
-    return printGrid(new Map([...grid].map((p) => [p, "#"])));
+  if (grid2 instanceof Set) {
+    return printGrid(new Map([...grid2].map((p) => [p, "#"])));
   }
+  const grid = grid2 as ReadonlyMap<Pos2, V>;
   let showWidth = 1;
   for (const v of grid.values()) {
     if (v === null) {
@@ -441,4 +488,28 @@ export function stanzas(s: string): string[] {
 
 export function record<T>(r: Record<string, T>): Record<string, T> {
   return r;
+}
+
+export type Hole = { __hole: Hole };
+
+export type ReplaceHole<T, R> = T extends infer Case
+  ? ReplaceHoleHelper<Case, R>
+  : never;
+type ReplaceHoleHelper<T, R> = T extends Hole
+  ? R
+  : T extends Set<infer Item>
+  ? Set<ReplaceHole<Item, R>>
+  : T extends Map<infer Key, infer Val>
+  ? Map<ReplaceHole<Key, R>, ReplaceHole<Val, R>>
+  : { [k in keyof T]: ReplaceHole<T[k], R> };
+
+export function call<T>(f: () => T): T {
+  return f();
+}
+
+export function assert(b: boolean, ...args: any[]): void {
+  if (!b) {
+    console.error("assert failed:", ...args);
+    throw new Error("assert failed");
+  }
 }
