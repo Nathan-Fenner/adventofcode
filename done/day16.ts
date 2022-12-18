@@ -19,7 +19,7 @@ import {
   gcd,
   div,
   assert,
-} from "./common";
+} from "../common";
 
 console.info(input);
 

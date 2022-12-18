@@ -325,11 +325,11 @@ export function printGrid<V extends string | number | null>(
     return "(empty)";
   }
   let sTotal = "";
-  for (let y = min.y; y <= max.y; y++) {
+  for (let y = max.y; y >= min.y; y--) {
     for (let x = min.x; x <= max.x; x++) {
       const p = new Pos2(x, y);
       const s = grid.has(p) ? grid.get(p)!.toString() : "";
-      sTotal += s.padStart(showWidth, " ");
+      sTotal += s.padStart(showWidth, ".");
     }
     sTotal += "\n";
   }
@@ -512,4 +512,43 @@ export function assert(b: boolean, ...args: any[]): void {
     console.error("assert failed:", ...args);
     throw new Error("assert failed");
   }
+}
+
+export type IncRange = { lo: number; hi: number };
+
+export function rangeContains(r: IncRange | null, x: number): boolean {
+  if (!r) {
+    return false;
+  }
+  return x >= r.lo && x <= r.hi;
+}
+
+export function rangeOverlaps(a: IncRange | null, b: IncRange | null): boolean {
+  if (a === null || b === null) {
+    return false;
+  }
+  return (
+    rangeContains(a, b.lo) ||
+    rangeContains(a, b.hi) ||
+    rangeContains(b, a.lo) ||
+    rangeContains(b, a.hi)
+  );
+}
+
+export function rangeUnion(a: IncRange | null, b: IncRange | null) {
+  if (!a || !b) {
+    return a || b;
+  }
+  return { lo: Math.min(a.lo, b.lo), hi: Math.max(a.hi, b.hi) };
+}
+
+export function rangeIntersect(a: IncRange | null, b: IncRange | null) {
+  if (!a || !b) {
+    return null;
+  }
+  const r = { lo: Math.max(a.lo, b.lo), hi: Math.min(a.hi, b.hi) };
+  if (r.lo <= r.hi) {
+    return r;
+  }
+  return null;
 }
