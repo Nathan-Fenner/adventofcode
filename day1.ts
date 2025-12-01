@@ -28,4 +28,20 @@ import {
 
 console.info(input);
 
-console.info(sum(input.split(" ").map(toNum)));
+let at = 50;
+let count = 0;
+for (const line of input.split("\n")) {
+  const dir = line.startsWith("R") ? 1 : -1;
+  let num = toNum(line.slice(1));
+
+  while (num > 0) {
+    at += dir;
+    at = mod(at, 100);
+    if (at === 0) {
+      count += 1;
+    }
+    num -= 1;
+  }
+}
+
+console.info({ count });
