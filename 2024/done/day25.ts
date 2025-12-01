@@ -23,7 +23,7 @@ import {
   Pos3,
   first,
   ValueType,
-} from "./common";
+} from "../../common";
 
 console.info(input);
 

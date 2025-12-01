@@ -1,5 +1,4 @@
 import { readFileSync } from "fs";
-import { runInThisContext } from "vm";
 
 export const processArgs = process.argv.filter(
   (path) => !path.startsWith("C:"),
