@@ -1,4 +1,5 @@
 import { readFileSync } from "fs";
+import { runInThisContext } from "vm";
 
 export const processArgs = process.argv.filter(
   (path) => !path.startsWith("C:"),
@@ -161,17 +162,19 @@ export function memoize<F extends Function>(
     }
     cache.set(key, LOOP);
 
+    /*
     const oldInfo = console.info;
     console.info = (...args) => {
       oldInfo("    ", ...args);
     };
-
+*/
     const answer = f(...args);
-
+    /*
     console.info = oldInfo;
+    */
 
     cache.set(key, answer);
-    debug("-->", answer);
+    // debug("-->", answer);
     return answer;
   }) as any;
 }
@@ -192,7 +195,19 @@ export class Pos3 extends ValueType {
     public readonly y: number,
     public readonly z: number,
   ) {
+    if (x === 0) {
+      x = 0;
+    }
+    if (y === 0) {
+      y = 0;
+    }
+    if (z === 0) {
+      z = 0;
+    }
     super([x, y, z]);
+    this.x = x;
+    this.y = y;
+    this.z = z;
   }
   public shift(dx: number, dy: number, dz: number): Pos3 {
     return new Pos3(this.x + dx, this.y + dy, this.z + dz);
@@ -205,6 +220,16 @@ export class Pos3 extends ValueType {
   }
   public scale(k: number): Pos3 {
     return new Pos3(this.x * k, this.y * k, this.z * k);
+  }
+  public dot(other: Pos3): number {
+    return this.x * other.x + this.y * other.y + this.z * other.z;
+  }
+  public cross(other: Pos3): Pos3 {
+    return new Pos3(
+      this.y * other.z - this.z * other.y,
+      this.z * other.x - this.x * other.z,
+      this.x * other.y - this.y * other.x,
+    );
   }
   public neighborsOrtho(): Pos3[] {
     return [
@@ -230,11 +255,25 @@ export class Pos3 extends ValueType {
       Math.abs(other.z - this.z)
     );
   }
+  public toString(): string {
+    return `${this.x};${this.y};${this.z}`;
+  }
 }
 
 export class Pos2 extends ValueType {
   constructor(public readonly x: number, public readonly y: number) {
+    if (x === 0) {
+      x = 0; // normalize neg 0
+    }
+    if (y === 0) {
+      y = 0; // normalize neg 0
+    }
     super([x, y]);
+    this.x = x;
+    this.y = y;
+  }
+  public toString(): string {
+    return `${this.x};${this.y}`;
   }
   public shift(dx: number, dy: number): Pos2 {
     return new Pos2(this.x + dx, this.y + dy);
@@ -283,7 +322,10 @@ export function parseGrid(src: string, cellSize = 1) {
   for (let y = 0; y < lines.length; y++) {
     for (let i = 0; i < lines[y].length; i += cellSize) {
       const x = i / cellSize;
-      grid.set(new Pos2(x, y), lines[y].slice(i, i + cellSize));
+      const cellStr = lines[y].slice(i, i + cellSize);
+      if (cellStr.trim()) {
+        grid.set(new Pos2(x, y), cellStr);
+      }
     }
     width = Math.max(width, Math.ceil(lines[y].length / cellSize));
   }
@@ -325,7 +367,7 @@ export function printGrid<V extends string | number | null>(
     return "(empty)";
   }
   let sTotal = "";
-  for (let y = max.y; y >= min.y; y--) {
+  for (let y = 0; y <= max.y; y++) {
     for (let x = min.x; x <= max.x; x++) {
       const p = new Pos2(x, y);
       const s = grid.has(p) ? grid.get(p)!.toString() : "";
@@ -551,4 +593,14 @@ export function rangeIntersect(a: IncRange | null, b: IncRange | null) {
     return r;
   }
   return null;
+}
+
+export function last<T>(items: readonly T[]): T {
+  assert(items.length > 0);
+  return items[items.length - 1];
+}
+export function first<T>(items: Iterable<T>): T {
+  const ts = [...items];
+  assert(ts.length > 0);
+  return ts[0];
 }
