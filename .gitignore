@@ -1,3 +1,6 @@
 node_modules
 *.txt
 load.bat
+
+// Usually lockfile should be included but I'm being lazy
+package-lock.json
