@@ -37,20 +37,17 @@ for (const line of input.split("\n")) {
     if (index + left > line.length) {
       throw new Error("bad out of range");
     }
-    if (left === 1) {
-      let m = 0;
-      for (let i = index; i < line.length; i++) {
-        m = Math.max(m, toNum(line[i]));
-      }
-      return m;
-    }
     // Include or exclude!
     const exclude = f(index + 1, left);
-    const include = toNum(line[index] + f(index + 1, left - 1).toString());
+    const include =
+      left >= 2
+        ? toNum(line[index] + f(index + 1, left - 1).toString())
+        : toNum(line[index]);
     return Math.max(exclude, include);
   });
 
   const best = f(0, 12);
+  console.info({ best });
   total += best;
 }
 console.info({ total });
