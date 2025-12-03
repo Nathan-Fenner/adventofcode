@@ -30,14 +30,27 @@ console.info(input);
 
 let total = 0;
 for (const line of input.split("\n")) {
-  let best = 0;
-  for (let i = 0; i < line.length - 1; i++) {
-    for (let j = i + 1; j < line.length; j++) {
-      const num = toNum(line[i] + line[j]);
-      best = Math.max(best, num);
+  const f = memoize((index: number, left: number): number => {
+    if (index + left === line.length) {
+      return toNum(line.slice(index));
     }
-  }
-  console.info({ best });
+    if (index + left > line.length) {
+      throw new Error("bad out of range");
+    }
+    if (left === 1) {
+      let m = 0;
+      for (let i = index; i < line.length; i++) {
+        m = Math.max(m, toNum(line[i]));
+      }
+      return m;
+    }
+    // Include or exclude!
+    const exclude = f(index + 1, left);
+    const include = toNum(line[index] + f(index + 1, left - 1).toString());
+    return Math.max(exclude, include);
+  });
+
+  const best = f(0, 12);
   total += best;
 }
 console.info({ total });
