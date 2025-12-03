@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "go": "esr day2.ts"
+    "go": "esr day3.ts"
   },
   "dependencies": {
     "@types/node": "^18.11.9",
