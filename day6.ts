@@ -29,16 +29,34 @@ import {
 
 console.info(input);
 
-const lines = input.split("\n").map((line) => line.trim().split(/\s+/));
+const lines = input.split("\n");
 
 let grandTotal = 0;
-for (let i = 0; i < lines[0].length; i++) {
-  const nums = lines.slice(0, lines.length - 1).map((line) => toNum(line[i]));
-  console.info({ nums });
-  if (lines.at(-1)![i] === "+") {
+
+const width = lines[0].length;
+const height = lines.length;
+
+let nums: number[] = [];
+for (let x = width - 1; x >= 0; x--) {
+  let digits: string = "";
+  for (let y = 0; y < height - 1; y++) {
+    if (lines[y][x] !== " ") {
+      digits += lines[y][x];
+    }
+  }
+
+  if (digits) {
+    nums.push(toNum(digits));
+  }
+
+  const op = lines[height - 1][x];
+
+  if (op === "+") {
     grandTotal += sum(nums);
-  } else {
+    nums = [];
+  } else if (op === "*") {
     grandTotal += product(nums);
+    nums = [];
   }
 }
 
