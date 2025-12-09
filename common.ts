@@ -366,7 +366,7 @@ export function printGrid<V extends string | number | null>(
     return "(empty)";
   }
   let sTotal = "";
-  for (let y = 0; y <= max.y; y++) {
+  for (let y = min.y; y <= max.y; y++) {
     for (let x = min.x; x <= max.x; x++) {
       const p = new Pos2(x, y);
       const s = grid.has(p) ? grid.get(p)!.toString() : "";
