@@ -74,13 +74,10 @@ const solveMachine1 = (target: string, buttons: number[][]) => {
 };
 
 const solveMachine2 = (
+  { line }: { line: number },
   overallTarget: readonly number[],
-  buttons: number[][],
+  originalButtons: number[][],
 ) => {
-  type StateStr = string & { __state: void };
-  const stateToStr = (t: number[]): StateStr => t.join("/") as StateStr;
-  const stateFromStr = (t: StateStr): number[] => t.split("/").map(toNum);
-
   let best = 1 / 0;
 
   const solveFrom = (
@@ -112,7 +109,23 @@ const solveMachine2 = (
       return toggle;
     };
 
+    // Is there a button we can't press?
+    const pressable = buttons.filter((b) => b.every((v) => state[v] > 0));
+    if (pressable.length < buttons.length) {
+      return solveFrom(state, { sofar, buttons: pressable });
+    }
+
     // Is there a button we HAVE to press?
+    for (let i = 0; i < state.length; i++) {
+      if (state[i] > 0) {
+        const usefulButtons = buttons.filter((b) => b.includes(i));
+        if (usefulButtons.length === 0) {
+          // We can't reach this counter
+          return;
+        }
+      }
+    }
+
     for (let i = 0; i < state.length; i++) {
       for (let j = 0; j < state.length; j++) {
         if (state[i] > state[j]) {
@@ -124,6 +137,17 @@ const solveMachine2 = (
             // console.info("impossible imbalance");
             return;
           }
+        }
+      }
+    }
+
+    for (let i = 0; i < state.length; i++) {
+      for (let j = 0; j < state.length; j++) {
+        if (state[i] > state[j]) {
+          // Is this "special".
+          const usefulButtons = buttons.filter(
+            (b) => b.includes(i) && !b.includes(j),
+          );
           if (usefulButtons.length === 1) {
             // We must press it!
             solveFrom(pushedButton(usefulButtons[0]), {
@@ -131,6 +155,44 @@ const solveMachine2 = (
               buttons,
             });
             return;
+          }
+        }
+      }
+    }
+
+    // Is there a button we HAVE to press?
+    for (let i = 0; i < state.length; i++) {
+      if (state[i] > 0) {
+        const usefulButtons = buttons.filter((b) => b.includes(i));
+
+        if (usefulButtons.length === 1) {
+          // We must press this button immediately.
+          solveFrom(pushedButton(usefulButtons[0]), {
+            sofar: sofar + 1,
+            buttons,
+          });
+          return;
+        }
+      }
+    }
+
+    for (let i = 0; i < state.length; i++) {
+      for (let j = 0; j < state.length; j++) {
+        if (i === j) {
+          continue;
+        }
+        if (state[i] >= state[j]) {
+          // If all of the buttons containing 'i' also contain 'j',
+          // then we cannot press any button that has 'j' on its own.
+          if (buttons.every((b) => !b.includes(i) || b.includes(j))) {
+            // All of the buttons containing i also have j.
+            const goodButtons = buttons.filter(
+              (b) => b.includes(i) || !b.includes(j),
+            );
+            if (goodButtons.length < buttons.length) {
+              // Remove them!
+              return solveFrom(state, { sofar, buttons: goodButtons });
+            }
           }
         }
       }
@@ -149,7 +211,7 @@ const solveMachine2 = (
     }
   };
 
-  solveFrom(overallTarget, { sofar: 0, buttons });
+  solveFrom(overallTarget, { sofar: 0, buttons: originalButtons });
 
   return best;
 };
@@ -157,9 +219,10 @@ const solveMachine2 = (
 let total = 0;
 let line = 1;
 for (const machine of machines) {
-  console.info("trying line", line);
-  const solved = solveMachine2(machine.joltage, machine.buttons);
-  console.info({ solved });
+  // console.info("trying line", line);
+  const now = Date.now();
+  const solved = solveMachine2({ line }, machine.joltage, machine.buttons);
+  console.info({ solved, line, elapsed: Date.now() - now });
   total += solved;
   line += 1;
 }
