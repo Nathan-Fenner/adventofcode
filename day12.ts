@@ -92,6 +92,10 @@ function solveTarget({
   height: number;
   counts: readonly number[];
 }): boolean {
+  if (Math.floor(width / 3) * Math.floor(height / 3) >= sum(targetCounts)) {
+    return true;
+  }
+
   {
     let mustFit = 0;
     for (let i = 0; i < targetCounts.length; i++) {
@@ -104,7 +108,7 @@ function solveTarget({
     // console.info("left", width * height - mustFit);
   }
 
-  console.info({ width, height }, targetCounts);
+  // console.info({ width, height }, targetCounts);
 
   const placedShapes: Pos2[][][] = rotatedShapes.map((rotations) => {
     const placed: Pos2[][] = [];
@@ -200,19 +204,28 @@ function solveTarget({
   return false;
 }
 
+const nowBegin = Date.now();
+
 let iter = 0;
 let count = 0;
 for (const target of targets) {
-  console.info("iter", iter);
-
   const now = Date.now();
   const v = solveTarget(target);
   if (v) {
     count += 1;
   }
-  console.info("--> ", v);
-  console.info("elapsed", Date.now() - now, "ms");
+  const elapsed = Date.now() - now;
+  if (elapsed > 500) {
+    console.info("=====================");
+    console.info("iter", iter);
+    console.info(target);
+    console.info("--> ", v);
+    console.info("elapsed", elapsed, "ms");
+    console.info("=====================");
+  }
   iter += 1;
 }
 
 console.info({ count });
+
+console.info("total elapsed", Date.now() - nowBegin);
